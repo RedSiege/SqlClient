@@ -31,8 +31,8 @@ namespace SqlClient
 
             if (error)
             {
-                Console.WriteLine("[*]Ex: SqlClient.exe --username <username> --password <password> --server <IP Address|host> --database <databasename> --query <SQL Query> ");
-                Console.WriteLine("[*]Ex: SqlClient.exe --server <IP Address|host> --database <databasename> --query <SQL Query> ");
+                Console.WriteLine("[*]Ex: SqlClient.exe --username <username> --password <password> --server <IP Address|host> --database <databasename> <SQL Query> ");
+                Console.WriteLine("[*]Ex: SqlClient.exe --server <IP Address|host> --database <databasename> <SQL Query> ");
                 return;
             }
 
