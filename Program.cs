@@ -10,20 +10,50 @@ namespace SqlClient
     {
         static void Main(string[] args)
         {
-            if (args.Length != 5)
+            string connString = string.Empty;
+            
+
+            ArgOptions options = CommandLineArguments.ArgParse(args);
+            bool error = false;
+            
+            if (string.IsNullOrEmpty(options.DatabaseName))
             {
-                Console.WriteLine("[*]ERROR: Please provide the correct number of arguments!");
-                Console.WriteLine("[*]Ex: SqlClient.exe <username> <password> <IP Address> <databasename> <SQL Query>");
+                error = true;
+            }
+            if (string.IsNullOrEmpty(options.Server))
+            {
+                error = true;
+            }
+            if (string.IsNullOrEmpty(options.Query))
+            {
+                error = true;
+            }
+
+            if (error)
+            {
+                Console.WriteLine("[*]Ex: SqlClient.exe --username <username> --password <password> --server <IP Address|host> --database <databasename> --query <SQL Query> ");
+                Console.WriteLine("[*]Ex: SqlClient.exe --server <IP Address|host> --database <databasename> --query <SQL Query> ");
                 return;
             }
-            string connString = @"Server=" + args[2] + ";Database=" + args[3] + ";User ID=" + args[0] + ";Password=" + args[1];
+
+            if (string.IsNullOrEmpty(options.UserName) && string.IsNullOrEmpty(options.Password))
+            {
+                connString = $"Server={options.Server};Database={options.DatabaseName}; Integrated Security=True";
+            }
+            else
+            {
+                connString = $"Server={options.Server};Database={options.DatabaseName}; User ID={options.UserName};Password={options.Password}";
+            }
+
+            string query = options.Query;
+
 
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
                     //retrieve the SQL Server instance version
-                    string query = args[4];
+                    
 
                     SqlCommand cmd = new SqlCommand(query, conn);
 

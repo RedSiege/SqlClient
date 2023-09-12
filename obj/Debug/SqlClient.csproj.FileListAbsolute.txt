@@ -1,0 +1,6 @@
+C:\Users\local_admin\Documents\GitHub\SqlClient\bin\Debug\SqlClient.exe
+C:\Users\local_admin\Documents\GitHub\SqlClient\bin\Debug\SqlClient.pdb
+C:\Users\local_admin\Documents\GitHub\SqlClient\obj\Debug\SqlClient.csproj.CoreCompileInputs.cache
+C:\Users\local_admin\Documents\GitHub\SqlClient\obj\Debug\SqlClient.exe
+C:\Users\local_admin\Documents\GitHub\SqlClient\obj\Debug\SqlClient.pdb
+C:\Users\local_admin\Documents\GitHub\SqlClient\obj\Debug\SqlClient.csprojAssemblyReference.cache
