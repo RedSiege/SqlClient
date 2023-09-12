@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Data;
 
 namespace SqlClient
 {
@@ -10,50 +11,65 @@ namespace SqlClient
     {
         static void Main(string[] args)
         {
-            if (args.Length != 5)
+            string connString = string.Empty;
+
+
+            ArgOptions options = CommandLineArguments.ArgParse(args);
+            bool error = false;
+
+            if (string.IsNullOrEmpty(options.DatabaseName))
             {
-                Console.WriteLine("[*]ERROR: Please provide the correct number of arguments!");
-                Console.WriteLine("[*]Ex: SqlClient.exe <username> <password> <IP Address> <databasename> <SQL Query>");
+                error = true;
+            }
+            if (string.IsNullOrEmpty(options.Server))
+            {
+                error = true;
+            }
+            if (string.IsNullOrEmpty(options.Query))
+            {
+                error = true;
+            }
+
+            if (error)
+            {
+                Console.WriteLine("[*]Ex: SqlClient.exe --username <username> --password <password> --server <IP Address|host> --database <databasename> <SQL Query> ");
+                Console.WriteLine("[*]Ex: SqlClient.exe --server <IP Address|host> --database <databasename> <SQL Query> ");
                 return;
             }
-            string connString = @"Server=" + args[2] + ";Database=" + args[3] + ";User ID=" + args[0] + ";Password=" + args[1];
 
+            if (string.IsNullOrEmpty(options.UserName) && string.IsNullOrEmpty(options.Password))
+            {
+                connString = $"Server={options.Server};Database={options.DatabaseName}; Integrated Security=True";
+            }
+            else
+            {
+                connString = $"Server={options.Server};Database={options.DatabaseName}; User ID={options.UserName};Password={options.Password}";
+            }
+
+            string query = options.Query;
+            List<int> columnWidths = new List<int>();
+            
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
                     //retrieve the SQL Server instance version
-                    string query = args[4];
 
+                    DataSet ds = new DataSet();
                     SqlCommand cmd = new SqlCommand(query, conn);
-
-                    //open connection
-                    conn.Open();
-
-                    //execute the SQLCommand
-                    SqlDataReader dr = cmd.ExecuteReader();
-
-                    //check if there are records
-                    if (dr.HasRows)
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(ds);
+                    if (ds.Tables.Count > 0)
                     {
-                        while (dr.Read())
-                        {
-                            //display retrieved record (first column only/string value)
-                            for (int i = 0; i < dr.FieldCount; i++)
-                            {
-                                Console.WriteLine(dr.GetName(i));
-                            }
-                            for (int i = 0; i < dr.FieldCount; i++)
-                            {
-                                Console.WriteLine(dr.GetValue(i));
-                            }
-                        }
+                        PrintDataTable(ds.Tables[0]);
                     }
+
+                    
                     else
                     {
                         Console.WriteLine("No data found.");
                     }
-                    dr.Close();
+                    
                 }
             }
             catch (Exception ex)
@@ -61,6 +77,53 @@ namespace SqlClient
                 //display error message
                 Console.WriteLine("Exception: " + ex.Message);
             }
+        }
+
+        static void PrintDataTable(DataTable dataTable)
+        {
+            string[] columnNames = dataTable.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+            // Calculate the minimum width for each column
+            int[] columnWidths = new int[dataTable.Columns.Count];
+            for (int i = 0; i < dataTable.Columns.Count; i++)
+            {
+                int maxColumnWidth = columnNames[i].Length;
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string value = row[i].ToString();
+                    if (value.Length > maxColumnWidth)
+                    {
+                        maxColumnWidth = value.Length;
+                    }
+                }
+                columnWidths[i] = maxColumnWidth + 2; // Add margin
+            }
+
+            // Print the table
+            Console.WriteLine(new string('=', columnWidths.Sum() + columnWidths.Length - 1));
+            foreach (var columnName in columnNames)
+            {
+                int itemIndex = columnNames.ToList().IndexOf(columnName);
+                string formattedItem = columnName.PadRight(columnWidths[itemIndex]);
+                Console.Write($"| {formattedItem} ");
+                
+            }
+
+            Console.WriteLine("|");
+            Console.WriteLine(new string('=', columnWidths.Sum() + columnWidths.Length - 1));
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                foreach (var item in row.ItemArray)
+                {
+                    int itemIndex = row.ItemArray.ToList().IndexOf(item);
+                    string formattedItem = item.ToString().PadRight(columnWidths[itemIndex]);
+                    Console.Write($"| {formattedItem} ");
+                }
+                Console.WriteLine("|");
+            }
+
+            Console.WriteLine(new string('=', columnWidths.Sum() + columnWidths.Length - 1));
         }
     }
 }
